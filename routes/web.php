@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\VisitorController;
+use App\Http\Controllers\DepartmentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -10,8 +12,25 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::controller(VisitorController::class)->group(function () {
+    Route::get('visitors', 'index')->name('visitorsIndex');
+    Route::get('visitors/create', 'create')->name('visitorsCreate');
+    Route::post('visitors', 'store')->name('visitorsStore');
+    Route::get('visitors/{visitor}', 'show')->name('visitorsShow');
+    Route::get('visitors/{visitor}/edit', 'edit')->name('visitorsEdit');
+    Route::put('visitors/{visitor}', 'update')->name('visitorsUpdate');
+    Route::delete('visitors/{visitor}', 'destroy')->name('visitorsDestroy');
+});
+
+Route::controller(DepartmentController::class)->group(function () {
+    Route::get('departments', 'index')->name('departmentsIndex');
+    Route::post('departments', 'store')->name('departmentsStore');
+    Route::put('departments/{department}', 'update')->name('departmentsUpdate');
+    Route::delete('departments/{department}', 'destroy')->name('departmentsDestroy');
+});
+
 Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
+    return Inertia::render('Dashboard', []);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 require __DIR__.'/settings.php';
