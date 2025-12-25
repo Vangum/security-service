@@ -19,7 +19,11 @@ class VisitorController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('Visitor/Index', []);
+        $visitors = Visitor::with(['department', 'document'])->orderByDesc('entry_datetime')->get();
+
+        return Inertia::render('Visitor/Index', [
+            'visitors' => $visitors,
+        ]);
     }
 
     /**
@@ -101,7 +105,7 @@ class VisitorController extends Controller
      */
     public function edit(Visitor $visitor)
     {
-        //
+        dd($visitor);
     }
 
     /**
@@ -117,6 +121,6 @@ class VisitorController extends Controller
      */
     public function destroy(Visitor $visitor)
     {
-        //
+        dd($visitor);
     }
 }

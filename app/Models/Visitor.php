@@ -24,6 +24,15 @@ class Visitor extends Model
         'remarks',
     ];
 
+    protected $appends = [
+        'birth_date_formatted',
+        'entry_datetime_formatted',
+        'exit_datetime_formatted',
+        'birth_date_for_input',
+        'entry_datetime_for_input',
+        'exit_datetime_for_input',
+    ];
+
     protected $casts = [
         'birth_date' => 'date',
         'entry_datetime' => 'datetime',
@@ -82,5 +91,47 @@ class Visitor extends Model
         }
 
         return $value;
+    }
+
+    protected function birthDateFormatted(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->birth_date ? $this->birth_date->format('d.m.Y') : null
+        );
+    }
+
+    protected function entryDatetimeFormatted(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->entry_datetime ? $this->entry_datetime->format('d.m.Y H:i') : null
+        );
+    }
+
+    protected function exitDatetimeFormatted(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->exit_datetime ? $this->exit_datetime->format('d.m.Y H:i') : null
+        );
+    }
+
+    protected function birthDateForInput(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->birth_date ? $this->birth_date->format('Y-m-d') : null
+        );
+    }
+
+    protected function entryDatetimeForInput(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->entry_datetime ? $this->entry_datetime->format('Y-m-d\TH:i') : null
+        );
+    }
+
+    protected function exitDatetimeForInput(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->exit_datetime ? $this->exit_datetime->format('Y-m-d\TH:i') : null
+        );
     }
 }
