@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('department_id')->constrained()->restrictOnDelete();
             $table->date('birth_date');
             $table->string('position', 150);
-            $table->string('phone')->unique();
+            $table->string('phone');
             $table->timestamp('entry_datetime');
             $table->timestamp('exit_datetime');
             $table->text('remarks')->nullable();

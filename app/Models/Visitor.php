@@ -137,4 +137,17 @@ class Visitor extends Model
             fn() => $this->exit_datetime ? $this->exit_datetime->format('Y-m-d\TH:i') : null
         );
     }
+
+    public function syncDocument(array $data): void
+    {
+        if ($this->document?->type !== $data['type']) {
+            $this->document?->delete();
+            $this->document()->create($data);
+            return;
+        }
+
+        $this->document
+            ? $this->document->update($data)
+            : $this->document()->create($data);
+    }
 }

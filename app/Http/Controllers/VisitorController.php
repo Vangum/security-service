@@ -30,8 +30,7 @@ class VisitorController extends Controller
                     $q->where('full_name', 'ilike', "%{$search}%")
                         ->orWhere('phone', 'ilike', "%{$search}%")
                         ->orWhere('position', 'ilike', "%{$search}%")
-                        ->orWhereHas('department', fn ($d) =>
-                        $d->where('name', 'ilike', "%{$search}%")
+                        ->orWhereHas('department', fn($d) => $d->where('name', 'ilike', "%{$search}%")
                         );
                 });
             })
@@ -63,55 +62,30 @@ class VisitorController extends Controller
      */
     public function store(StoreVisitorRequest $request): RedirectResponse
     {
-        try {
-            DB::transaction(function () use ($request) {
-                $data = $request->validated();
+        DB::transaction(function () use ($request) {
+            $data = $request->validated();
 
-                $visitor = Visitor::create([
-                    'full_name' => $data['full_name'],
+            $visitor = Visitor::create(
+                $request->only([
+                    'full_name',
+                    'birth_date',
+                    'position',
+                    'phone',
+                    'entry_datetime',
+                    'exit_datetime',
+                    'remarks',
+                ]) + [
                     'department_id' => $data['department'],
-                    'birth_date' => $data['birth_date'],
-                    'position' => $data['position'],
-                    'phone' => $data['phone'],
-                    'entry_datetime' => $data['entry_datetime'],
-                    'exit_datetime' => $data['exit_datetime'],
-                    'remarks' => $data['remarks'] ?? null,
                     'created_by' => auth()->id(),
-                ]);
+                ]
+            );
 
-                $documentData = match ($data['document_type']) {
-                    'passport' => [
-                        'type' => 'passport',
-                        'passport_series' => $data['passport_series'] ?? null,
-                        'passport_number' => $data['passport_number'] ?? null,
-                        'passport_issue_date' => $data['passport_issue_date'] ?? null,
-                        'passport_issued_by' => $data['passport_issued_by'] ?? null,
-                        'passport_department_code' => $data['passport_department_code'] ?? null,
-                    ],
-                    'license' => [
-                        'type' => 'license',
-                        'license_series_number' => $data['license_series_number'] ?? null,
-                        'license_issue_date' => $data['license_issue_date'] ?? null,
-                        'license_region' => $data['license_region'] ?? null,
-                        'license_issued_by' => $data['license_issued_by'] ?? null,
-                    ],
-                    'other' => [
-                        'type' => 'other',
-                        'other_document_name' => $data['other_document_name'] ?? null,
-                        'other_series_number' => $data['other_series_number'] ?? null,
-                        'other_series_number_original' => $data['other_series_number'] ?? null,
-                        'other_issue_date' => $data['other_issue_date'] ?? null,
-                        'other_issued_by' => $data['other_issued_by'] ?? null,
-                    ]
-                };
+            $visitor->syncDocument(
+                $this->buildDocumentData($data)
+            );
+        });
 
-                $visitor->document()->create($documentData);
-            });
-
-            return Redirect::route('visitorsIndex');
-        } catch (\Throwable $th) {
-            return Redirect::back()->withErrors(['error' => 'Ошибка при добавлении посетителя. Попробуйте еще раз.']);
-        }
+        return Redirect::route('visitorsIndex');
     }
 
     /**
@@ -138,64 +112,32 @@ class VisitorController extends Controller
      */
     public function update(StoreVisitorRequest $request, Visitor $visitor)
     {
-        try {
-            DB::transaction(function () use ($request, $visitor) {
-                $data = $request->validated();
 
-                $visitor->update([
-                    'full_name' => $data['full_name'],
+        DB::transaction(function () use ($request, $visitor) {
+            $data = $request->validated();
+
+            $visitor->update(
+                $request->only([
+                    'full_name',
+                    'birth_date',
+                    'position',
+                    'phone',
+                    'entry_datetime',
+                    'exit_datetime',
+                    'remarks',
+                ]) + [
                     'department_id' => $data['department'],
-                    'birth_date' => $data['birth_date'],
-                    'position' => $data['position'],
-                    'phone' => $data['phone'],
-                    'entry_datetime' => $data['entry_datetime'],
-                    'exit_datetime' => $data['exit_datetime'],
-                    'remarks' => $data['remarks'] ?? null,
                     'updated_by' => auth()->id(),
-                ]);
+                ]
+            );
 
-                $documentData = match ($data['document_type']) {
-                    'passport' => [
-                        'type' => 'passport',
-                        'passport_series' => $data['passport_series'] ?? null,
-                        'passport_number' => $data['passport_number'] ?? null,
-                        'passport_issue_date' => $data['passport_issue_date'] ?? null,
-                        'passport_issued_by' => $data['passport_issued_by'] ?? null,
-                        'passport_department_code' => $data['passport_department_code'] ?? null,
-                    ],
-                    'license' => [
-                        'type' => 'license',
-                        'license_series_number' => $data['license_series_number'] ?? null,
-                        'license_issue_date' => $data['license_issue_date'] ?? null,
-                        'license_region' => $data['license_region'] ?? null,
-                        'license_issued_by' => $data['license_issued_by'] ?? null,
-                    ],
-                    'other' => [
-                        'type' => 'other',
-                        'other_document_name' => $data['other_document_name'] ?? null,
-                        'other_series_number' => $data['other_series_number'] ?? null,
-                        'other_series_number_original' => $data['other_series_number'] ?? null,
-                        'other_issue_date' => $data['other_issue_date'] ?? null,
-                        'other_issued_by' => $data['other_issued_by'] ?? null,
-                    ]
-                };
 
-                if ($visitor->document) {
-                    if ($visitor->document->type !== $data['document_type']) {
-                        $visitor->document->delete();
-                        $visitor->document()->create($documentData);
-                    } else {
-                        $visitor->document->update($documentData);
-                    }
-                } else {
-                    $visitor->document()->create($documentData);
-                }
-            });
+            $visitor->syncDocument(
+                $this->buildDocumentData($data)
+            );
+        });
 
-            return Redirect::route('visitorsIndex');
-        } catch (\Throwable $th) {
-            return Redirect::back()->withErrors(['error' => 'Ошибка при обновлении данных посетителя. Попробуйте еще раз.']);
-        }
+        return Redirect::route('visitorsIndex');
     }
 
     /**
@@ -222,4 +164,34 @@ class VisitorController extends Controller
             return Redirect::back()->withErrors(['error' => 'Ошибка при удалении посетителя. Попробуйте еще раз.']);
         }
     }
+
+    private function buildDocumentData(array $data): array
+    {
+        return match ($data['document_type']) {
+            'passport' => [
+                'type' => 'passport',
+                'passport_series' => $data['passport_series'] ?? null,
+                'passport_number' => $data['passport_number'] ?? null,
+                'passport_issue_date' => $data['passport_issue_date'] ?? null,
+                'passport_issued_by' => $data['passport_issued_by'] ?? null,
+                'passport_department_code' => $data['passport_department_code'] ?? null,
+            ],
+            'license' => [
+                'type' => 'license',
+                'license_series_number' => $data['license_series_number'] ?? null,
+                'license_issue_date' => $data['license_issue_date'] ?? null,
+                'license_region' => $data['license_region'] ?? null,
+                'license_issued_by' => $data['license_issued_by'] ?? null,
+            ],
+            'other' => [
+                'type' => 'other',
+                'other_document_name' => $data['other_document_name'] ?? null,
+                'other_series_number' => $data['other_series_number'] ?? null,
+                'other_series_number_original' => $data['other_series_number'] ?? null,
+                'other_issue_date' => $data['other_issue_date'] ?? null,
+                'other_issued_by' => $data['other_issued_by'] ?? null,
+            ],
+        };
+    }
+
 }
