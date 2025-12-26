@@ -6,6 +6,7 @@ use App\Http\Requests\StoreVisitorRequest;
 use App\Models\Department;
 use App\Models\Visitor;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -16,12 +17,34 @@ class VisitorController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $visitors = Visitor::with(['department', 'document'])->orderByDesc('entry_datetime')->get();
+        $perPage = $request->integer('per_page', 20);
+        $search = $request->string('search')->trim()->toString();
+
+        $perPage = in_array($perPage, [5, 10, 20, 50, 100]) ? $perPage : 20;
+
+        $visitors = Visitor::with(['department', 'document'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('full_name', 'ilike', "%{$search}%")
+                        ->orWhere('phone', 'ilike', "%{$search}%")
+                        ->orWhere('position', 'ilike', "%{$search}%")
+                        ->orWhereHas('department', fn ($d) =>
+                        $d->where('name', 'ilike', "%{$search}%")
+                        );
+                });
+            })
+            ->latest('entry_datetime')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('Visitor/Index', [
             'visitors' => $visitors,
+            'filters' => [
+                'per_page' => $perPage,
+                'search' => $search,
+            ],
         ]);
     }
 

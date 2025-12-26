@@ -24,15 +24,15 @@ class DatabaseSeeder extends Seeder
         Department::factory(15)->create();
 
 
-        Visitor::factory(10)
+        Visitor::factory(100)
             ->has(Document::factory()->passport())
             ->create();
 
-        Visitor::factory(10)
+        Visitor::factory(100)
             ->has(Document::factory()->license())
             ->create();
 
-        Visitor::factory(10)
+        Visitor::factory(100)
             ->has(Document::factory()->other())
             ->create();
     }
