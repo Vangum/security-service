@@ -2,14 +2,13 @@
 
 use App\Http\Controllers\VisitorController;
 use App\Http\Controllers\DepartmentController;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
+    return Redirect::route('dashboard');
 })->name('home');
 
 Route::controller(VisitorController::class)->group(function () {
