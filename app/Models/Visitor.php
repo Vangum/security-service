@@ -22,6 +22,9 @@ class Visitor extends Model
         'entry_datetime',
         'exit_datetime',
         'remarks',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $appends = [
@@ -87,7 +90,7 @@ class Visitor extends Model
         $digits = preg_replace('/\D/', '', $value);
 
         if (strlen($digits) === 11 && $digits[0] === '7') {
-            return '7(' . substr($digits, 1, 3) . ')' . substr($digits, 4, 3) . '-' . substr($digits, 7, 2) . '-' . substr($digits, 9, 2);
+            return '+7(' . substr($digits, 1, 3) . ')' . substr($digits, 4, 3) . '-' . substr($digits, 7, 2) . '-' . substr($digits, 9, 2);
         }
 
         return $value;

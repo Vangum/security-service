@@ -6,31 +6,44 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'visitor_id',
+
         'type',
+
         'passport_series',
         'passport_number',
         'passport_issue_date',
         'passport_issued_by',
         'passport_department_code',
+
         'license_series_number',
         'license_issue_date',
         'license_region',
         'license_issued_by',
+
         'other_document_name',
         'other_series_number',
         'other_series_number_original',
         'other_issue_date',
         'other_issued_by',
+
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
-    protected $appends = ['type_label'];
+    protected $appends = [
+        'type_label',
+        'passport_series_for_input',
+        'license_series_number_for_input',
+    ];
 
     public function visitor(): BelongsTo
     {
@@ -83,6 +96,16 @@ class Document extends Model
             get: fn ($value) => $value,
             set: fn ($value) => $value
         );
+    }
+
+    protected function passportSeriesForInput(): Attribute
+    {
+        return Attribute::get(fn () => $this->passport_series ? preg_replace('/\s/', '', $this->passport_series) : null);
+    }
+
+    protected function licenseSeriesNumberForInput(): Attribute
+    {
+        return Attribute::get(fn () => $this->license_series_number ? preg_replace('/\s/', '', $this->license_series_number) : null);
     }
 
     private function formatPassportSeries(?string $series): ?string

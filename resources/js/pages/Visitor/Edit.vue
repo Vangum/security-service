@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import {type BreadcrumbItem} from '@/types';
 import {Head, router, useForm} from '@inertiajs/vue3';
-import {visitorsCreate, visitorsIndex, visitorsStore} from "@/routes";
+import {visitorsCreate, visitorsIndex, visitorsUpdate} from "@/routes";
 import {Button} from '@/components/ui/button'
 import {RadioGroup, RadioGroupItem,} from '@/components/ui/radio-group'
 import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet,} from '@/components/ui/field'
@@ -12,7 +12,7 @@ import {Textarea} from '@/components/ui/textarea'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Добавить посетителя',
+        title: 'Редактировать посетителя',
         href: visitorsCreate().url,
     },
 ];
@@ -22,50 +22,85 @@ interface Department {
     name: string;
 }
 
-const {departments} = defineProps<{
+interface Document {
+    type: string;
+    passport_series_for_input?: string;
+    passport_number?: string;
+    passport_issue_date?: string;
+    passport_issued_by?: string;
+    passport_department_code?: string;
+    
+    license_series_number_for_input?: string;
+    license_issue_date?: string;
+    license_region?: string;
+    license_issued_by?: string;
+    
+    other_document_name?: string;
+    other_series_number_original?: string;
+    other_issue_date?: string;
+    other_issued_by?: string;
+}
+
+interface Visitor {
+    id: number,
+    full_name: string;
+    department: Department;
+    birth_date_for_input: string;
+    position: string;
+    document: Document;
+    phone: string;
+    entry_datetime_for_input: string;
+    exit_datetime_for_input: string;
+    remarks: string | null;
+}
+
+const {departments, visitor} = defineProps<{
     departments: Department[];
+    visitor: Visitor;
 }>();
 
 const form = useForm({
-    full_name: '',
-    department: '',
-    birth_date: '',
-    position: '',
-    phone: '',
+    full_name: visitor.full_name,
+    department: visitor.department.id,
+    birth_date: visitor.birth_date_for_input,
+    position: visitor.position,
+    phone: visitor.phone,
     
-    document_type: 'passport',
-    passport_series: '',
-    passport_number: '',
-    passport_issue_date: '',
-    passport_issued_by: '',
-    passport_department_code: '',
+    document_type: visitor.document.type,
     
-    license_series_number: '',
-    license_issue_date: '',
-    license_region: '',
-    license_issued_by: '',
+    passport_series: visitor.document.passport_series_for_input ?? '',
+    passport_number: visitor.document.passport_number ?? '',
+    passport_issue_date: visitor.document.passport_issue_date ?? '',
+    passport_issued_by: visitor.document.passport_issued_by ?? '',
+    passport_department_code: visitor.document.passport_department_code ?? '',
     
-    other_document_name: '',
-    other_series_number: '',
-    other_issue_date: '',
-    other_issued_by: '',
+    license_series_number: visitor.document.license_series_number_for_input ?? '',
+    license_issue_date: visitor.document.license_issue_date ?? '',
+    license_region: visitor.document.license_region ?? '',
+    license_issued_by: visitor.document.license_issued_by ?? '',
     
-    entry_datetime: '',
-    exit_datetime: '',
-    remarks: '',
+    other_document_name: visitor.document.other_document_name ?? '',
+    other_series_number: visitor.document.other_series_number_original ?? '',
+    other_issue_date: visitor.document.other_issue_date ?? '',
+    other_issued_by: visitor.document.other_issued_by ?? '',
+    
+    entry_datetime: visitor.entry_datetime_for_input,
+    exit_datetime: visitor.exit_datetime_for_input,
+    
+    remarks: visitor.remarks ?? '',
 })
 </script>
 
 <template>
-    <Head title="Добавить посетителя" />
+    <Head title="Редактировать посетителя" />
     
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
             <div class="w-4xl">
-                <form @submit.prevent="form.post(visitorsStore().url)">
+                <form @submit.prevent="form.put(visitorsUpdate(visitor.id).url)">
                     <FieldGroup>
                         <FieldSet>
-                            <FieldLegend>Добавить посетителя</FieldLegend>
+                            <FieldLegend>Редактировать посетителя</FieldLegend>
                             <FieldDescription>
                                 Пожалуйста, заполните все необходимые поля для добавления посетителя.
                             </FieldDescription>

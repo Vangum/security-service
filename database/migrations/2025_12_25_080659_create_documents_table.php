@@ -36,6 +36,9 @@ return new class extends Migration
             $table->string('other_issued_by', 250)->nullable();
 
             $table->timestamps();
+
+            $table->softDeletes();
+            $table->foreignId('deleted_by')->nullable()->constrained('users');
         });
     }
 
